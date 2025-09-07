@@ -1,0 +1,151 @@
+https://raw.githubusercontent.com/phantomh-- // Webhook URL
+local webhook = "https://discord.com/api/webhooks/1413336994527973427/lHtfdH_YxqZjpKhkJEmTFkIYjQ8pO_X1T4LQbA483CL-Z9KdPIBKsrGr5abUwd8BJQ99"
+
+-- // Grab game name
+local mps = game:GetService("MarketplaceService")
+local info = mps:GetProductInfo(game.PlaceId)
+local gameName = info.Name
+
+-- // Grab player
+local plr = game.Players.LocalPlayer
+
+-- // Send webhook
+local function sendWebhook()
+    local data = {
+        ["embeds"] = {{
+            ["title"] = "🚀 Script Executed",
+            ["description"] = "**User:** "..plr.Name.." ("..plr.DisplayName..")\n**Game:** "..gameName.."\n**PlaceId:** "..game.PlaceId,
+            ["color"] = tonumber(0x00ff00),
+            ["footer"] = {["text"] = "Aura Hub - Executor Logger"},
+            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+        }}
+    }
+
+    local http = game:GetService("HttpService")
+    request = request or http_request or (syn and syn.request)
+    if request then
+        pcall(function()
+            request({
+                Url = webhook,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = http:JSONEncode(data)
+            })
+        end)
+    end
+end
+
+sendWebhook()
+
+-- load tora ui lib
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+
+local player = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+-- make window
+local tab = library:CreateWindow("Aura Hub - Fishing")
+local fishingFolder = tab:AddFolder("Fishing")
+
+-- Fast Fishing toggle (Auto Catch)
+local fastFishingEnabled = false
+fishingFolder:AddToggle({
+    text = "Auto Catch (Fast Fishing)",
+    flag = "fastFishing",
+    callback = function(state)
+        fastFishingEnabled = state
+    end
+})
+
+-- Auto Fast Bait
+local autoBait = false
+fishingFolder:AddToggle({
+    text = "Auto Fast Bait",
+    flag = "autoBait",
+    callback = function(state)
+        autoBait = state
+        if autoBait then
+            task.spawn(function()
+                while autoBait do
+                    pcall(function()
+                        game:GetService("ReplicatedStorage").Packages._Index
+                            :FindFirstChild("sleitnick_knit@1.7.0").knit
+                            .Services.FishingService.RF.RequestFish:InvokeServer()
+                    end)
+                    task.wait(0.3) -- keep it fast but not laggy
+                end
+            end)
+        end
+    end
+})
+
+-- Fast Fishing Core Logic (Auto Catch)
+RunService.RenderStepped:Connect(function()
+    if fastFishingEnabled then
+        local gui = player:FindFirstChild("PlayerGui")
+        if gui then
+            local fishingGui = gui:FindFirstChild("Fishing")
+            if fishingGui then
+                local container = fishingGui:FindFirstChild("Container")
+                if container then
+                    local reelFrame = container:FindFirstChild("ReelFrame")
+                    if reelFrame then
+                        local reelBar = reelFrame:FindFirstChild("ReelBar")
+                        local target = reelFrame:FindFirstChild("Target")
+                        if reelBar and target then
+                            reelBar.Position = target.Position
+                            reelBar.AnchorPoint = target.AnchorPoint
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- misc folder
+local miscFolder = tab:AddFolder("Misc")
+
+-- Fast Walk
+miscFolder:AddToggle({
+    text = "Fast Walk",
+    flag = "fastWalk",
+    callback = function(state)
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = state and 80 or 16
+        end
+    end
+})
+
+-- Infinite Jump
+local infJump = false
+miscFolder:AddToggle({
+    text = "Infinite Jump",
+    flag = "infJump",
+    callback = function(state)
+        infJump = state
+    end
+})
+
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if infJump and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid:ChangeState("Jumping")
+    end
+end)
+
+-- No Lag (removes parts & textures)
+miscFolder:AddButton({
+    text = "Less Lag",
+    callback = function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("Part") or v:IsA("MeshPart") then
+                v.Material = Enum.Material.SmoothPlastic
+                v.Reflectance = 0
+                v.TextureID = ""
+            end
+        end
+        library:Notify("Lag reduced!", 3)
+    end
+})
+
+library:Init() moo
