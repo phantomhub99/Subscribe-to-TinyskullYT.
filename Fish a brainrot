@@ -1,4 +1,4 @@
-https://raw.githubusercontent.com/phantomh-- // Webhook URL
+-- // Webhook URL
 local webhook = "https://discord.com/api/webhooks/1413336994527973427/lHtfdH_YxqZjpKhkJEmTFkIYjQ8pO_X1T4LQbA483CL-Z9KdPIBKsrGr5abUwd8BJQ99"
 
 -- // Grab game name
